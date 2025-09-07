@@ -9,11 +9,12 @@ const protectRoute = asyncHandler(async (req, res, next) => {
   console.log("Cookies:", req.cookies);
 
   // 1. Token from cookie
-  if (req.cookies.token) {
+  if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
-  }
-  // 2. Token from Authorization header (safe check)
+  } 
+  // 2. Token from Authorization header (fully safe check)
   else if (
+    req.headers &&
     typeof req.headers.authorization === "string" &&
     req.headers.authorization.startsWith("Bearer ")
   ) {
