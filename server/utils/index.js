@@ -10,7 +10,7 @@ const createJWT = (res, userId) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: true,     // force false in dev, change to true in prod (with HTTPS)
-    sameSite: "lax",   // use "none" only if frontend is on different domain
+    sameSite: "none",   // use "none" only if frontend is on different domain
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
   });
 
