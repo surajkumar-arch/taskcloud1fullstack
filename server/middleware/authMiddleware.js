@@ -8,21 +8,22 @@ const protectRoute = asyncHandler(async (req, res, next) => {
   console.log("Authorization Header:", req.headers?.authorization);
   console.log("Cookies:", req.cookies);
 
-  // 1. Token from cookie (check if req.cookies exists and has token)
+  // 1. Try to get token from cookies
   if (req.cookies && typeof req.cookies.token === "string") {
     token = req.cookies.token;
-  } 
-  // 2. Token from Authorization header (safe check)
+    console.log("Token found in cookies");
+  }
+  // 2. Else try to get token from Authorization header
   else if (
     req.headers &&
     typeof req.headers.authorization === "string" &&
     req.headers.authorization.startsWith("Bearer ")
   ) {
-    // Now safe to split
     token = req.headers.authorization.split(" ")[1];
+    console.log("Token found in Authorization header");
   }
 
-  // Token not found
+  // If no token found, respond with 401
   if (!token) {
     return res.status(401).json({
       status: false,
@@ -31,13 +32,13 @@ const protectRoute = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    // Verify token
+    // Verify JWT token
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
     // Find user by ID from token payload
-    const resp = await User.findById(decodedToken.userId).select("isAdmin email");
+    const user = await User.findById(decodedToken.userId).select("isAdmin email");
 
-    if (!resp) {
+    if (!user) {
       return res.status(401).json({
         status: false,
         message: "User  not found. Not authorized.",
@@ -46,8 +47,8 @@ const protectRoute = asyncHandler(async (req, res, next) => {
 
     // Attach user info to request object
     req.user = {
-      email: resp.email,
-      isAdmin: resp.isAdmin,
+      email: user.email,
+      isAdmin: user.isAdmin,
       userId: decodedToken.userId,
     };
 
