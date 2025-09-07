@@ -12,7 +12,7 @@ const protectRoute = asyncHandler(async (req, res, next) => {
   if (req.cookies.token) {
     token = req.cookies.token;
   }
-  // 2. Token from Authorization header
+  // 2. Token from Authorization header (safe check)
   else if (
     typeof req.headers.authorization === "string" &&
     req.headers.authorization.startsWith("Bearer ")
@@ -49,4 +49,15 @@ const protectRoute = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { protectRoute };
+const isAdminRoute = (req, res, next) => {
+  if (req.user && req.user.isAdmin) {
+    next();
+  } else {
+    return res.status(401).json({
+      status: false,
+      message: "Not authorized as admin. Try login as admin.",
+    });
+  }
+};
+
+export { isAdminRoute, protectRoute };
