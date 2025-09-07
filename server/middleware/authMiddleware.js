@@ -5,27 +5,28 @@ import User from "../models/userModel.js";
 const protectRoute = asyncHandler(async (req, res, next) => {
   let token;
 
-  // 1. Cookie se check karo
+  console.log("Authorization Header:", req.headers.authorization);
+  console.log("Cookies:", req.cookies);
+
+  // 1. Token from cookie
   if (req.cookies.token) {
     token = req.cookies.token;
   }
-  // 2. Authorization header se check karo
+  // 2. Token from Authorization header
   else if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
+    typeof req.headers.authorization === "string" &&
+    req.headers.authorization.startsWith("Bearer ")
   ) {
     token = req.headers.authorization.split(" ")[1];
   }
 
-  // Agar token mila hi nahi
+  // Token not found
   if (!token) {
     return res.status(401).json({
       status: false,
       message: "Not authorized. Try login again.",
     });
   }
-  console.log("Cookies from client:", req.cookies);
-
 
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
@@ -48,15 +49,4 @@ const protectRoute = asyncHandler(async (req, res, next) => {
   }
 });
 
-const isAdminRoute = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
-    next();
-  } else {
-    return res.status(401).json({
-      status: false,
-      message: "Not authorized as admin. Try login as admin.",
-    });
-  }
-};
-
-export { isAdminRoute, protectRoute };
+export { protectRoute };
