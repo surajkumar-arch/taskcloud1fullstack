@@ -5,50 +5,36 @@ import User from "../models/userModel.js";
 const protectRoute = asyncHandler(async (req, res, next) => {
   let token;
 
-  console.log("Authorization Header:", req.headers?.authorization);
-  console.log("Cookies:", req.cookies);
-
-  // 1. Try to get token from cookies
-  if (req.cookies && typeof req.cookies.token === "string") {
+  // 1. Cookie se check karo
+  if (req.cookies.token) {
     token = req.cookies.token;
-    console.log("Token found in cookies");
   }
-  // 2. Else try to get token from Authorization header
+  // 2. Authorization header se check karo
   else if (
-    req.headers &&
-    typeof req.headers.authorization === "string" &&
-    req.headers.authorization.startsWith("Bearer ")
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
-    console.log("Token found in Authorization header");
   }
 
-  // If no token found, respond with 401
+  // Agar token mila hi nahi
   if (!token) {
     return res.status(401).json({
       status: false,
       message: "Not authorized. Try login again.",
     });
   }
+  console.log("Cookies from client:", req.cookies);
+
 
   try {
-    // Verify JWT token
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Find user by ID from token payload
-    const user = await User.findById(decodedToken.userId).select("isAdmin email");
+    const resp = await User.findById(decodedToken.userId).select("isAdmin email");
 
-    if (!user) {
-      return res.status(401).json({
-        status: false,
-        message: "User  not found. Not authorized.",
-      });
-    }
-
-    // Attach user info to request object
     req.user = {
-      email: user.email,
-      isAdmin: user.isAdmin,
+      email: resp.email,
+      isAdmin: resp.isAdmin,
       userId: decodedToken.userId,
     };
 
@@ -73,4 +59,4 @@ const isAdminRoute = (req, res, next) => {
   }
 };
 
-export { isAdminRoute, protectRoute };
+export { isAdminRoute, protectRoute };
