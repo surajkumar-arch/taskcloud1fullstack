@@ -245,7 +245,7 @@ const changeUserPassword = asyncHandler(async (req, res) => {
 
     res.status(201).json({
       status: true,
-      message: Password chnaged successfully.,
+      message: "Password chnaged successfully".,
     });
   } else {
     res.status(404).json({ status: false, message: "User not found" });
