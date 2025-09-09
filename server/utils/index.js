@@ -9,7 +9,7 @@ const createJWT = (res, userId) => {
   // 🛠 Cookie setup (works on localhost too)
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true,     // force false in dev, change to true in prod (with HTTPS)
+    secure: process.env.NODE_ENV === 'production',     // force false in dev, change to true in prod (with HTTPS)
     sameSite: "None",   // use "none" only if frontend is on different domain
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
   });
