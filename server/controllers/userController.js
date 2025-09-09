@@ -1,258 +1,112 @@
-import asyncHandler from "express-async-handler";
-import Notice from "../models/notis.js";
-import User from "../models/userModel.js";
-import createJWT from "../utils/index.js";
+import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Button, Loading, Textbox } from "../components";
+import { useLoginMutation } from "../redux/slices/api/authApiSlice";
+import { setCredentials } from "../redux/slices/authSlice";
+import { useEffect } from "react";
 
-// POST request - login user
-const loginUser = asyncHandler(async (req, res) => {
-  try {
-    const { email, password } = req.body;
+const Login = () => {
+  const { user } = useSelector((state) => state.auth);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-    const user = await User.findOne({ email });
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [login, { isLoading }] = useLoginMutation();
 
-    if (!user) {
-      return res
-        .status(401)
-        .json({ status: false, message: "Invalid email or password." });
+  const handleLogin = async (data) => {
+    try {
+      const res = await login(data).unwrap();
+
+      dispatch(setCredentials(res));
+      navigate("/");
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
+  };
 
-    if (!user?.isActive) {
-      return res.status(401).json({
-        status: false,
-        message: "User account has been deactivated, contact the administrator",
-      });
-    }
+  useEffect(() => {
+    user && navigate("/dashboard");
+  }, [user]);
 
-    const isMatch = await user.matchPassword(password);
+  return (
+    <div className='w-full min-h-screen flex items-center justify-center flex-col lg:flex-row bg-[#f3f4f6] dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#302943] via-slate-900 to-black'>
+      <div className='w-full md:w-auto flex gap-0 md:gap-40 flex-col md:flex-row items-center justify-center'>
+        <div className='h-full w-full lg:w-2/3 flex flex-col items-center justify-center'>
+          <div className='w-full md:max-w-lg 2xl:max-w-3xl flex flex-col items-center justify-center gap-5 md:gap-y-10 2xl:-mt-20'>
+            <span className='flex gap-1 py-1 px-3 border rounded-full text-sm md:text-base dark:border-gray-700 dark:text-blue-400 border-gray-300 text-gray-600'>
+              Manage all your task in one place!
+            </span>
+            <p className='flex flex-col gap-0 md:gap-4 text-4xl md:text-6xl 2xl:text-7xl font-black text-center dark:text-gray-400 text-blue-700'>
+              <span>Cloud-based</span>
+              <span>Task Manager</span>
+            </p>
 
-    if (user && isMatch) {
-      const token = createJWT(res, user._id);
+            <div className='cell'>
+              <div className='circle rotate-in-up-left'></div>
+            </div>
+          </div>
+        </div>
 
-      user.password = undefined;
-
-      res.status(200).json({ user, token });
-    } else {
-      return res
-        .status(401)
-        .json({ status: false, message: "Invalid email or password" });
-    }
-  } catch (error) {
-    console.error("Login Error:", error);
-    res
-      .status(500)
-      .json({ status: false, message: "Internal server error", error: error.message });
-  }
-});
-
-const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, isAdmin, role, title } = req.body;
-
-  const userExists = await User.findOne({ email });
-
-  if (userExists) {
-    return res
-      .status(400)
-      .json({ status: false, message: "Email address already exists" });
-  }
-
-  const user = await User.create({
-    name,
-    email,
-    password,
-    isAdmin,
-    role,
-    title,
-  });
-
-  if (user) {
-    createJWT(res, user._id);
-
-    user.password = undefined;
-
-    res.status(201).json({ user });
-  } else {
-    return res
-      .status(400)
-      .json({ status: false, message: "Invalid user data" });
-  }
-});
-
-const logoutUser = (req, res) => {
-  res.cookie("token", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-  res.status(200).json({ message: "Logged out successfully" });
+        <div className='w-full md:w-1/3 p-4 md:p-1 flex flex-col justify-center items-center'>
+          <form
+            onSubmit={handleSubmit(handleLogin)}
+            className='form-container w-full md:w-[400px] flex flex-col gap-y-8 bg-white dark:bg-slate-900 px-10 pt-14 pb-14'
+          >
+            <div>
+              <p className='text-blue-600 text-3xl font-bold text-center'>
+                Welcome back!
+              </p>
+              <p className='text-center text-base text-gray-700 dark:text-gray-500'>
+                Keep all your credetials safe!
+              </p>
+            </div>
+            <div className='flex flex-col gap-y-5'>
+              <Textbox
+                placeholder='you@example.com'
+                type='email'
+                name='email'
+                label='Email Address'
+                className='w-full rounded-full'
+                register={register("email", {
+                  required: "Email Address is required!",
+                })}
+                error={errors.email ? errors.email.message : ""}
+              />
+              <Textbox
+                placeholder='password'
+                type='password'
+                name='password'
+                label='Password'
+                className='w-full rounded-full'
+                register={register("password", {
+                  required: "Password is required!",
+                })}
+                error={errors.password ? errors.password?.message : ""}
+              />
+              <span className='text-sm text-gray-600 hover:underline cursor-pointer'>
+                Forget Password?
+              </span>
+            </div>
+            {isLoading ? (
+              <Loading />
+            ) : (
+              <Button
+                type='submit'
+                label='Log in'
+                className='w-full h-10 bg-blue-700 text-white rounded-full'
+              />
+            )}
+          </form>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-const getTeamList = asyncHandler(async (req, res) => {
-  const { search } = req.query;
-  let query = {};
-
-  if (search) {
-    const searchQuery = {
-      $or: [
-        { title: { $regex: search, $options: "i" } },
-        { name: { $regex: search, $options: "i" } },
-        { role: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ],
-    };
-    query = { ...query, ...searchQuery };
-  }
-
-  const user = await User.find(query).select("name title role email isActive");
-
-  res.status(201).json(user);
-});
-
-const getNotificationsList = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-
-  const notice = await Notice.find({
-    team: userId,
-    isRead: { $nin: [userId] },
-  })
-    .populate("task", "title")
-    .sort({ _id: -1 });
-
-  res.status(200).json(notice);
-});
-
-const getUserTaskStatus = asyncHandler(async (req, res) => {
-  const tasks = await User.find()
-    .populate("tasks", "title stage")
-    .sort({ _id: -1 });
-
-  res.status(200).json(tasks);
-});
-
-const markNotificationRead = asyncHandler(async (req, res) => {
-  try {
-    const { userId } = req.user;
-    const { isReadType, id } = req.query;
-
-    if (isReadType === "all") {
-      await Notice.updateMany(
-        { team: userId, isRead: { $nin: [userId] } },
-        { $push: { isRead: userId } },
-        { new: true }
-      );
-    } else {
-      await Notice.findOneAndUpdate(
-        { _id: id, isRead: { $nin: [userId] } },
-        { $push: { isRead: userId } },
-        { new: true }
-      );
-    }
-    res.status(201).json({ status: true, message: "Done" });
-  } catch (error) {
-    console.error("Mark Notification Error:", error);
-    res.status(500).json({ status: false, message: "Server error" });
-  }
-});
-
-const updateUserProfile = asyncHandler(async (req, res) => {
-  const { userId, isAdmin } = req.user;
-  const { _id } = req.body;
-
-  const id =
-    isAdmin && userId === _id
-      ? userId
-      : isAdmin && userId !== _id
-      ? _id
-      : userId;
-
-  const user = await User.findById(id);
-
-  if (user) {
-    user.name = req.body.name || user.name;
-    user.title = req.body.title || user.title;
-    user.role = req.body.role || user.role;
-
-    const updatedUser = await user.save();
-
-    user.password = undefined;
-
-    res.status(201).json({
-      status: true,
-      message: "Profile Updated Successfully.",
-      user: updatedUser,
-    });
-  } else {
-    res.status(404).json({ status: false, message: "User not found" });
-  }
-});
-
-const activateUserProfile = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const user = await User.findById(id);
-
-  if (user) {
-    user.isActive = req.body.isActive;
-
-    await user.save();
-
-    user.password = undefined;
-
-    res.status(201).json({
-      status: true,
-      message: `User account has been ${
-        user?.isActive ? "activated" : "disabled"
-      }`,
-    });
-  } else {
-    res.status(404).json({ status: false, message: "User not found" });
-  }
-});
-
-const changeUserPassword = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-
-  if (userId === "65ff94c7bb2de638d0c73f63") {
-    return res.status(404).json({
-      status: false,
-      message: "This is a test user. You cannot change password. Thank you!",
-    });
-  }
-
-  const user = await User.findById(userId);
-
-  if (user) {
-    user.password = req.body.password;
-
-    await user.save();
-
-    user.password = undefined;
-
-    res.status(201).json({
-      status: true,
-      message: "Password changed successfully.",
-    });
-  } else {
-    res.status(404).json({ status: false, message: "User not found" });
-  }
-});
-
-const deleteUserProfile = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  await User.findByIdAndDelete(id);
-
-  res.status(200).json({ status: true, message: "User deleted successfully" });
-});
-
-export {
-  activateUserProfile,
-  changeUserPassword,
-  deleteUserProfile,
-  getNotificationsList,
-  getTeamList,
-  getUserTaskStatus,
-  loginUser,
-  logoutUser,
-  markNotificationRead,
-  registerUser,
-  updateUserProfile,
-};
+export default Login;
