@@ -1,20 +1,16 @@
-
-import jwt from "jsonwebtoken";
-
 const createJWT = (res, userId) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 
-  // 🛠 Cookie setup (works on localhost too)
+  const isProduction = process.env.NODE_ENV === 'production';
+
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',     // force false in dev, change to true in prod (with HTTPS)
-    sameSite: "None",   // use "none" only if frontend is on different domain
+    secure: isProduction, // true only in production (HTTPS)
+    sameSite: isProduction ? "None" : "Lax", // "None" for cross-site in prod, "Lax" for dev
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
   });
 
-  return token; // 👈 return so controller can send it in JSON too
+  return token;
 };
-
-export default createJWT;
