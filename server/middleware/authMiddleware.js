@@ -26,9 +26,6 @@ const protectRoute = asyncHandler(async (req, res, next) => {
     });
   }
 
-
-
-
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -37,7 +34,7 @@ const protectRoute = asyncHandler(async (req, res, next) => {
     if (!resp) {
       return res.status(401).json({
         status: false,
-        message: "User not found.",
+        message: "User  not found.",
       });
     }
 
@@ -53,9 +50,20 @@ const protectRoute = asyncHandler(async (req, res, next) => {
     return res.status(401).json({
       status: false,
       message: "Not authorized. Try login again.",
-    });
-  }
+    });
+  }
 });
 
-export {isAdminRoute,protectRoute}
+// Placeholder for isAdminRoute to avoid export error
+const isAdminRoute = (req, res, next) => {
+  if (req.user && req.user.isAdmin) {
+    next();
+  } else {
+    res.status(403).json({
+      status: false,
+      message: "Admin access required.",
+    });
+  }
+};
 
+export { isAdminRoute, protectRoute };
