@@ -25,16 +25,8 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
 
   if (user && isMatch) {
-    const token = createJWT(res, user._id);
-    res.cookie("token",token, {
-       httOnly : true ,
-       secure : process.env.NODE_ENV === "production",
-        sameSite = "none",
-    });
-
-
-
-
+    createJWT(res, user._id);
+  
 
 
     user.password = undefined;
