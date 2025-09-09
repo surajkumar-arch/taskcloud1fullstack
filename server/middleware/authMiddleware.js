@@ -5,10 +5,16 @@ import User from "../models/userModel.js";
 const protectRoute = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Only read from Authorization header
-  if (
+  console.log("Cookies from client:", req.cookies);  // Debug log
+
+  // 1. Check token in cookies
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+  // 2. Check token in Authorization header
+  else if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
+    req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
   }
@@ -28,7 +34,7 @@ const protectRoute = asyncHandler(async (req, res, next) => {
     if (!resp) {
       return res.status(401).json({
         status: false,
-        message: "User not found.",
+        message: "User  not found.",
       });
     }
 
@@ -46,8 +52,9 @@ const protectRoute = asyncHandler(async (req, res, next) => {
       message: "Not authorized. Try login again.",
     });
   }
-};
+});
 
+// Placeholder for isAdminRoute to avoid export error
 const isAdminRoute = (req, res, next) => {
   if (req.user && req.user.isAdmin) {
     next();
