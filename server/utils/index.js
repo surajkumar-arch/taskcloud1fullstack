@@ -9,7 +9,7 @@ expiresIn: "1d",
 res.cookie("token", token, {
 httpOnly: true,
 secure: process.env.NODE_ENV === 'production',     // force false in dev, change to true in prod (with HTTPS)
-sameSite: "None",   // use "none" only if frontend is on different domain
+sameSite: "none",   // use "none" only if frontend is on different domain
 maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
 });
 
