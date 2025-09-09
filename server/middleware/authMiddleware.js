@@ -26,6 +26,9 @@ const protectRoute = asyncHandler(async (req, res, next) => {
     });
   }
 
+
+
+
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -53,3 +56,6 @@ const protectRoute = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+export {isAdminRoute,protectRoute}
+
