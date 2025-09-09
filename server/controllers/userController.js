@@ -4,7 +4,7 @@ import User from "../models/userModel.js";
 import createJWT from "../utils/index.js";
 
 // POST request - login user
-const loginUser = asyncHandler(async (req, res) => {
+const loginUser  = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -20,7 +20,7 @@ const loginUser = asyncHandler(async (req, res) => {
       return res.status(401).json({
         status: false,
         message:
-          "User account has been deactivated, contact the administrator",
+          "User  account has been deactivated, contact the administrator",
       });
     }
 
@@ -46,7 +46,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // POST - Register a new user
-const registerUser = asyncHandler(async (req, res) => {
+const registerUser  = asyncHandler(async (req, res) => {
   const { name, email, password, isAdmin, role, title } = req.body;
 
   const userExists = await User.findOne({ email });
@@ -80,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 // POST - Logout user / clear cookie
-const logoutUser = (req, res) => {
+const logoutUser  = (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
     expires: new Date(0),
@@ -122,7 +122,7 @@ const getNotificationsList = asyncHandler(async (req, res) => {
   res.status(200).json(notice);
 });
 
-const getUserTaskStatus = asyncHandler(async (req, res) => {
+const getUser TaskStatus = asyncHandler(async (req, res) => {
   const tasks = await User.find()
     .populate("tasks", "title stage")
     .sort({ _id: -1 });
@@ -155,7 +155,7 @@ const markNotificationRead = asyncHandler(async (req, res) => {
   }
 });
 
-const updateUserProfile = asyncHandler(async (req, res) => {
+const updateUser Profile = asyncHandler(async (req, res) => {
   const { userId, isAdmin } = req.user;
   const { _id } = req.body;
 
@@ -173,21 +173,21 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.title = req.body.title || user.title;
     user.role = req.body.role || user.role;
 
-    const updatedUser = await user.save();
+    const updatedUser  = await user.save();
 
     user.password = undefined;
 
     res.status(201).json({
       status: true,
       message: "Profile Updated Successfully.",
-      user: updatedUser,
+      user: updatedUser ,
     });
   } else {
-    res.status(404).json({ status: false, message: "User not found" });
+    res.status(404).json({ status: false, message: "User  not found" });
   }
 });
 
-const activateUserProfile = asyncHandler(async (req, res) => {
+const activateUser Profile = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const user = await User.findById(id);
@@ -201,16 +201,16 @@ const activateUserProfile = asyncHandler(async (req, res) => {
 
     res.status(201).json({
       status: true,
-      message: `User account has been ${
+      message: `User  account has been ${
         user?.isActive ? "activated" : "disabled"
       }`,
     });
   } else {
-    res.status(404).json({ status: false, message: "User not found" });
+    res.status(404).json({ status: false, message: "User  not found" });
   }
 });
 
-const changeUserPassword = asyncHandler(async (req, res) => {
+const changeUser Password = asyncHandler(async (req, res) => {
   const { userId } = req.user;
 
   if (userId === "65ff94c7bb2de638d0c73f63") {
@@ -231,31 +231,31 @@ const changeUserPassword = asyncHandler(async (req, res) => {
 
     res.status(201).json({
       status: true,
-      message: Password changed successfully.,
+      message: "Password changed successfully.",
     });
   } else {
-    res.status(404).json({ status: false, message: "User not found" });
+    res.status(404).json({ status: false, message: "User  not found" });
   }
 });
 
-const deleteUserProfile = asyncHandler(async (req, res) => {
+const deleteUser Profile = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   await User.findByIdAndDelete(id);
 
-  res.status(200).json({ status: true, message: "User deleted successfully" });
+  res.status(200).json({ status: true, message: "User  deleted successfully" });
 });
 
 export {
-  activateUserProfile,
-  changeUserPassword,
-  deleteUserProfile,
+  activateUser Profile,
+  changeUser Password,
+  deleteUser Profile,
   getNotificationsList,
   getTeamList,
-  getUserTaskStatus,
-  loginUser,
-  logoutUser,
+  getUser TaskStatus,
+  loginUser ,
+  logoutUser ,
   markNotificationRead,
-  registerUser,
-  updateUserProfile,
+  registerUser ,
+  updateUser Profile,
 };
