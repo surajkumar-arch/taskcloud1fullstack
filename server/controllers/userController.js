@@ -25,9 +25,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
 
   if (user && isMatch) {
-   const token = createJWT(res, user._id);
-  
-
+    const toen = createJWT(res, user._id);
 
     user.password = undefined;
 
@@ -247,7 +245,7 @@ const changeUserPassword = asyncHandler(async (req, res) => {
 
     res.status(201).json({
       status: true,
-      message: "Password chnaged successfully",
+      message: `Password chnaged successfully.`,
     });
   } else {
     res.status(404).json({ status: false, message: "User not found" });
