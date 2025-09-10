@@ -25,11 +25,19 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
 
   if (user && isMatch) {
-    const token = createJWT(res, user._id);
+    createJWT(res, user._id);  // Sets HTTP-only cookie with token
 
     user.password = undefined;
 
-    res.status(200).json({user,token});
+    // ✅ Explicitly return the user data
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      role: user.role,
+      title: user.title,
+    });
   } else {
     return res
       .status(401)
@@ -59,11 +67,18 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-      createJWT(res, user._id);
+    createJWT(res, user._id);
 
     user.password = undefined;
 
-    res.status(201).json(user);
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      role: user.role,
+      title: user.title,
+    });
   } else {
     return res
       .status(400)
@@ -71,7 +86,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// POST -  Logout user / clear cookie
+// POST - Logout user / clear cookie
 const logoutUser = (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
@@ -80,22 +95,7 @@ const logoutUser = (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 };
 
-// @GET -   Get user profile
-// const getUserProfile = asyncHandler(async (req, res) => {
-//   const { userId } = req.user;
-
-//   const user = await User.findById(userId);
-
-//   user.password = undefined;
-
-//   if (user) {
-//     res.json({ ...user });
-//   } else {
-//     res.status(404);
-//     throw new Error("User not found");
-//   }
-// });
-
+// GET - Get Team List
 const getTeamList = asyncHandler(async (req, res) => {
   const { search } = req.query;
   let query = {};
@@ -117,7 +117,7 @@ const getTeamList = asyncHandler(async (req, res) => {
   res.status(201).json(user);
 });
 
-// @GET  - get user notifications
+// GET - User Notifications
 const getNotificationsList = asyncHandler(async (req, res) => {
   const { userId } = req.user;
 
@@ -131,7 +131,7 @@ const getNotificationsList = asyncHandler(async (req, res) => {
   res.status(200).json(notice);
 });
 
-// @GET  - get user task status
+// GET - User Task Status
 const getUserTaskStatus = asyncHandler(async (req, res) => {
   const tasks = await User.find()
     .populate("tasks", "title stage")
@@ -140,32 +140,28 @@ const getUserTaskStatus = asyncHandler(async (req, res) => {
   res.status(200).json(tasks);
 });
 
-// @GET  - get user notifications
+// GET - Mark Notification as Read
 const markNotificationRead = asyncHandler(async (req, res) => {
-  try {
-    const { userId } = req.user;
-    const { isReadType, id } = req.query;
+  const { userId } = req.user;
+  const { isReadType, id } = req.query;
 
-    if (isReadType === "all") {
-      await Notice.updateMany(
-        { team: userId, isRead: { $nin: [userId] } },
-        { $push: { isRead: userId } },
-        { new: true }
-      );
-    } else {
-      await Notice.findOneAndUpdate(
-        { _id: id, isRead: { $nin: [userId] } },
-        { $push: { isRead: userId } },
-        { new: true }
-      );
-    }
-    res.status(201).json({ status: true, message: "Done" });
-  } catch (error) {
-    console.log(error);
+  if (isReadType === "all") {
+    await Notice.updateMany(
+      { team: userId, isRead: { $nin: [userId] } },
+      { $push: { isRead: userId } },
+      { new: true }
+    );
+  } else {
+    await Notice.findOneAndUpdate(
+      { _id: id, isRead: { $nin: [userId] } },
+      { $push: { isRead: userId } },
+      { new: true }
+    );
   }
+  res.status(201).json({ status: true, message: "Done" });
 });
 
-// PUT - Update user profile
+// PUT - Update User Profile
 const updateUserProfile = asyncHandler(async (req, res) => {
   const { userId, isAdmin } = req.user;
   const { _id } = req.body;
@@ -181,7 +177,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
   if (user) {
     user.name = req.body.name || user.name;
-    // user.email = req.body.email || user.email;
     user.title = req.body.title || user.title;
     user.role = req.body.role || user.role;
 
@@ -199,7 +194,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// PUT - active/disactivate user profile
+// PUT - Activate / Deactivate User Profile
 const activateUserProfile = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -223,36 +218,28 @@ const activateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
+// PUT - Change User Password
 const changeUserPassword = asyncHandler(async (req, res) => {
   const { userId } = req.user;
-
-  // Remove this condition
-  if (userId === "65ff94c7bb2de638d0c73f63") {
-    return res.status(404).json({
-      status: false,
-      message: "This is a test user. You can not chnage password. Thank you!!!",
-    });
-  }
 
   const user = await User.findById(userId);
 
   if (user) {
     user.password = req.body.password;
-
     await user.save();
 
     user.password = undefined;
 
     res.status(201).json({
       status: true,
-      message: `Password chnaged successfully.`,
+      message: "Password changed successfully.",
     });
   } else {
     res.status(404).json({ status: false, message: "User not found" });
   }
 });
 
-// DELETE - delete user account
+// DELETE - Delete User
 const deleteUserProfile = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
