@@ -25,7 +25,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
 
   if (user && isMatch) {
-    const toen = createJWT(res, user._id);
+    const token = createJWT(res, user._id);
 
     user.password = undefined;
 
