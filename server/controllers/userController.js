@@ -25,7 +25,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
 
   if (user && isMatch) {
-    createJWT(res, user._id);  // Sets HTTP-only cookie with token
+   const token = createJWT(res, user._id);  // Sets HTTP-only cookie with token
 
     user.password = undefined;
 
@@ -37,6 +37,8 @@ const loginUser = asyncHandler(async (req, res) => {
       isAdmin: user.isAdmin,
       role: user.role,
       title: user.title,
+      token,
+
     });
   } else {
     return res
